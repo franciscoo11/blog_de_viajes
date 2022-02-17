@@ -135,6 +135,10 @@ aplicacion.get('/procesar_cerrar_sesion', function (req, res) {
   res.redirect("/")
 });
 
+aplicacion.get('/admin/agregar', function (req,res){
+  res.render('admin/agregar', {mensaje: req.flash('mensaje'), usuario: req.session.usuario})
+})
+
 aplicacion.listen(8080, function () {
   console.log('Servidor iniciado');
 });
