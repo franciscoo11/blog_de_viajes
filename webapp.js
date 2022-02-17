@@ -116,7 +116,18 @@ aplicacion.post('/procesar_inicio', function (req, res) {
 
 
 aplicacion.get('/admin/index', function (req, res) {
-  res.render('admin/index', { usuario: req.session.usuario, mensaje: req.flash('mensaje') })
+  pool.getConnection(function, (err, connection({ 
+    const consulta = `
+      SELECT * 
+      FROM publicaciones
+      WHERE
+      autor_id = ${connection.escape(req.session.usuario.id)}
+    `
+    connection.query(consulta, function (err,filas,columnas){
+      res.render('admin/index', { usuario: req.session.usuario, mensaje: req.flash('mensaje'), publicaciones : filas })
+    })
+    connection.release()
+  })
 })
 
 aplicacion.get('/procesar_cerrar_sesion', function (req, res) {
