@@ -14,6 +14,9 @@ router.get('/', (req, res) => {
   pool.getConnection((err, connection) => {
     let consulta
     let modificadorConsulta= ""
+    let pagina = 0
+    let modificadorPagina = ""
+
     const busqueda = ( req.query.busqueda ) ? req.query.busqueda : ""
     if (busqueda != "") {
       modificadorConsulta = `
@@ -21,6 +24,16 @@ router.get('/', (req, res) => {
       titulo LIKE '%${busqueda}%' OR
       resumen LIKE '%${busqueda}%' OR
       contenido LIKE '%${busqueda}%'
+      `
+      modificadorPagina = ""
+    }
+    else {
+      pagina = ( req.query.pagina ) ? parseInt(req.query.pagina) : 0 
+      if (pagina < 0){
+        pagina = 0
+      }
+      modificadorPagina = `
+      LIMIT 5 OFFSET ${pagina*5}
       `
     }
     consulta = `
@@ -31,10 +44,10 @@ router.get('/', (req, res) => {
       ON publicaciones.autor_id = autores.id
       ${modificadorConsulta}
       ORDER BY fecha_hora DESC
-      LIMIT 5
+      ${modificadorPagina}
     `
     connection.query(consulta, (error, filas, campos) => {
-      res.render('index', { publicaciones: filas, busqueda: busqueda })
+      res.render('index', { publicaciones: filas, busqueda: busqueda, pagina : pagina })
     })
     connection.release()
   })
@@ -119,5 +132,25 @@ router.post('/procesar_inicio', (req, res) => {
     connection.release()
   })
 })
+
+router.get('/publicacion/:id', (req, res) => {
+  pool.getConnection((err, connection) => {
+    const consulta = `
+      SELECT *
+      FROM publicaciones
+      WHERE id = ${connection.escape(req.params.id)}
+    `
+    connection.query(consulta, (error, filas, campos) => {
+      if (filas.length > 0) {
+        res.render('publicacion', { publicacion: filas[0] })
+      }
+      else {
+        res.redirect('/')
+      }
+    })
+    connection.release()
+  })
+})
+
 
 module.exports = router

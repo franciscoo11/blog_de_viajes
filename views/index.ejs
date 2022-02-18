@@ -52,12 +52,21 @@
       <% }) %>
 
     </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <p class="centrado">
+          <a href="/?pagina=<%=pagina-1%>"><< Anterior</a>
+          |
+          <a href="/?pagina=<%=pagina+1%>">Siguiente >>
+          </a>
+        </p>
+      </div>
+    </div>
 
   </div>
 
-  <%- include ("./partials/footer") %>
-  <script src="javascripts/script.js"></script>
+  <% include ./partials/pie %>
+  <script src="/js/script.js"></script>
 </body>
 
 </html>
-
