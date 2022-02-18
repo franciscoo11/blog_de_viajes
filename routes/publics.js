@@ -54,7 +54,7 @@ router.get('/', (req, res) => {
 })
 
 router.get('/registro', (req, res) => {
-  respuesta.render('registro', { mensaje: req.flash('mensaje') })
+  res.render('registro', { mensaje: req.flash('mensaje') })
 })
 
 router.post('/procesar_registro', (req, res) => {

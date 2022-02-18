@@ -25,7 +25,7 @@ router.get('/admin/index', (req, res) => {
   })
 })
 
-router.get('/admin/procesar_cerrar_sesion', (req, res) => {
+router.get('/admin/cerrar-sesion', (req, res) => {
   req.session.destroy();
   res.redirect("/")
 })
@@ -52,8 +52,17 @@ router.post('/admin/procesar_agregar', (req, res) => {
       )
     `
     connection.query(consulta, (error, filas, campos) => {
-      req.flash('mensaje', 'Publicación agregada')
-      res.redirect("/admin/index")
+      console.log(error);
+      if (!error) {
+        req.flash('mensaje', 'Publicación agregada')
+        res.redirect("/admin/index")
+      }
+      else {
+        req.flash('mensaje', 'error al agregar publicacion')
+        res.redirect('/admin/agregar')
+
+      }
+      
     })
     connection.release()
   })

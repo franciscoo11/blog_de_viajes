@@ -11,8 +11,9 @@
 </head>
 
 <body>
+  
   <%- include ("../partials/header_private") %>
-
+  
   <div class="container">
     <h1>Admin - Mis publicaciones</h1>
     <hr>
@@ -25,28 +26,29 @@
         <h4><span class="icon-info"></span>
           <%mensaje%>
         </h4>
-        <% } %>
-        
+        <% }   %>
         <table>
           <thead>
             <tr>
               <th>titulo</th>
               <th>resumen</th>
               <th>votos</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            <% publicacion.forEach( (publicacion) => { %>
+            <% publicaciones.forEach( publicacion => { %>
             <tr>
               <td>
-                <% publicacion.titulo %>
+                <%=publicacion.titulo%>
               </td>
               <td>
-                <% publicacion.resumen %>
+                <%=publicacion.resumen%>
               </td>
               <td>
-                <% publicacion.votos %>
+                <%=publicacion.votos%>
               </td>
+              <td>
               <a href="/admin/editar/<%=publicacion.id%>"><span class="icon-edit"></span>
                 Editar
               </a>
@@ -57,10 +59,9 @@
               </a>
               </td>
             </tr>
-            <% } %>
+            <% }) %>
           </tbody>
-        </table>
-            
+        </table>  
         <hr>
         <a class="button" href="/admin/agregar">Agregar Publicación</a>
       </div>
@@ -69,8 +70,9 @@
           
   </div>
   
-
+  
   <%- include ("../partials/footer") %>
+  
   <script src="../js/script.js"></script>
 </body>
 
