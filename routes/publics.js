@@ -1,7 +1,31 @@
 const express = require('express')
 const router = express.Router()
 const mysql = require('mysql')
-var path = require('path')
+var path = require('path')\
+const nodemailer = require('nodemailer')
+
+const transporter = nodemailer.createTransporter({
+  service = "gmail",
+  auth: {
+    user: 'cuenta.prueba.1@gmail.com'
+    pass: 'cuenta123'
+  }
+})
+
+function sendmailwelcome(emaildestine,name) {
+  const opciones = {
+    from: 'cuenta.prueba.1@gmail.com',
+    to: emaildestine,
+    subject: 'Bienvenido al blog de viajes',
+    text: `Hola ${name}`
+  }
+  transporter.sendMail (opciones, (error, info) => {
+  });
+}
+
+                                                 
+                                                 
+                                                 
 
 var pool = mysql.createPool({
   connectionLimit: 20,
@@ -105,12 +129,14 @@ router.post('/procesar_registro', (req, res) => {
                   
                   const consultaAvatar = ` UPDATE autores SET avatar = ${connection.escape(nameFile)} WHERE id = ${connection.escape(id)}`
                   connection.query(consultaAvatar, (error, filas, campos) {
+                    sendmailwelcome(email,pseudonimo)
                     req.flash('mensaje', 'Usuario registrado con avatar')
                     res.redirect('/registro')
                   })
                 })
               }
               else {
+                sendmailwelcome(email,pseudonimo)
                 req.flash('mensaje', 'Usuario registrado')
                 res.redirect('/registro')
               }
