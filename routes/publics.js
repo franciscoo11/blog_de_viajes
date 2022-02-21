@@ -208,4 +208,31 @@ router.get('/autores', (req, res) => {
   })
 })
 
+router.get('/publicacion/:id/votar', (req,res) {
+  pool.getConnection((error,connection) => {
+    const consulta = ` 
+        SELECT * 
+        FROM publicaciones 
+        WHERE id = ${connection.escape(req.params.id)} 
+    `
+    connection.query(consulta, (error,filas,campos) => {
+      if (filas.length > 0) {
+        const consultaVoto = ` 
+        UPDATE publicaciones 
+        SET votos = votos + 1 
+        WHERE id = ${connection.escape(req.params.id)} 
+      `
+      connection.query(consultaVoto, (error,filas,campos) => {
+        res.redirect(`/publicacion/${req.params.id}`)
+      })
+      }
+      else {
+        req.flash('mensaje', 'Publicación invalida')
+        res.redirect('/')
+      }
+    })
+    connection.release()
+  })
+})
+
 module.exports = router
