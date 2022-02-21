@@ -171,18 +171,39 @@ router.get('/publicacion/:id', (req, res) => {
 })
 
 
-router.get('/autores', (req,res) => {
-  pool.getConnection((error,connection) => {
-    const consulta = ` 
-      SELECT * 
+router.get('/autores', (req, res) => {
+  pool.getConnection((err, connection) => {
+    const consulta = `
+      SELECT autores.id id, pseudonimo, avatar, publicaciones.id publicacion_id, titulo
       FROM autores
-      ORDER BY id DESC 
+      INNER JOIN
+      publicaciones
+      ON
+      autores.id = publicaciones.autor_id
+      ORDER BY autores.id DESC, publicaciones.fecha_hora DESC
     `
-    connection.query(consulta, (error,filas,campos) => {
-      res.render('autores', { autores: filas })
+    connection.query(consulta, (error, filas, campos) => {
+      autores = []
+      ultimoAutorId = undefined
+      filas.forEach(registro => {
+        if (registro.id != ultimoAutorId){
+          ultimoAutorId = registro.id
+          autores.push({
+            id: registro.id,
+            pseudonimo: registro.pseudonimo,
+            avatar: registro.avatar,
+            publicaciones: []
+          })
+        }
+        autores[autores.length-1].publicaciones.push({
+          id: registro.publicacion_id,
+          titulo: registro.titulo
+        })
+      });
+      res.render('autores', { autores: autores })
     })
-  
-  
+
+
     connection.release()
   })
 })
