@@ -1,13 +1,13 @@
 const express = require('express')
 const router = express.Router()
 const mysql = require('mysql')
-var path = require('path')\
+var path = require('path')
 const nodemailer = require('nodemailer')
 
-const transporter = nodemailer.createTransporter({
-  service = "gmail",
+const transporter = nodemailer.createTransport({
+  service : 'gmail',
   auth: {
-    user: 'cuenta.prueba.1@gmail.com'
+    user: 'cuenta.prueba.1@gmail.com',
     pass: 'cuenta123'
   }
 })
@@ -125,10 +125,15 @@ router.post('/procesar_registro', (req, res) => {
                 const id = filas.insertId
                 const nameFile = `${id}${path.extname(fileAvatar.name)}`
                 
-                fileAvatar.mv(`./public/avatars/${nameFile)`, (error) => {
-                  
-                  const consultaAvatar = ` UPDATE autores SET avatar = ${connection.escape(nameFile)} WHERE id = ${connection.escape(id)}`
-                  connection.query(consultaAvatar, (error, filas, campos) {
+                fileAvatar.mv(`./public/avatars/${nameFile}`, (error) => {
+
+                  const consultaAvatar = `
+                    UPDATE 
+                    autores 
+                    SET avatar = ${connection.escape(nameFile)} 
+                    WHERE id = ${connection.escape(id)}
+                  `
+                  connection.query(consultaAvatar, (error, filas, campos) => {
                     sendmailwelcome(email,pseudonimo)
                     req.flash('mensaje', 'Usuario registrado con avatar')
                     res.redirect('/registro')
@@ -234,7 +239,7 @@ router.get('/autores', (req, res) => {
   })
 })
 
-router.get('/publicacion/:id/votar', (req,res) {
+router.get('/publicacion/:id/votar', (req,res) => {
   pool.getConnection((error,connection) => {
     const consulta = ` 
         SELECT * 
