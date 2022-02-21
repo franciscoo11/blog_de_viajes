@@ -26,7 +26,7 @@
           <%=mensaje%></h4>
         <% } %>
 
-        <form action="/procesar_registro" method="POST">
+        <form action="/procesar_registro" method="POST" encType="multipart/form-data">
           <fieldset>
             <legend>Nuevo autor</legend>
             <p>
@@ -43,6 +43,11 @@
               <label for="pseudonimo">Pseudónimo</label>
               <br>
               <input type="text" id="pseudonimo" name="pseudonimo" required="true" />
+            </p>
+            <p>
+            <label for="avatar">Avatar</label>
+            <br>
+            <input type="file" id="avatar" name="avatar"/>
             </p>
             <p>
               <input class="primary" type="submit" value="Continuar" />
