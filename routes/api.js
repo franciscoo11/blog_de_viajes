@@ -10,11 +10,15 @@ var pool = mysql.createPool({
     database: 'blog_viajes'
 })
 
-router.get('api/v1/publicaciones', function (req, res) {
+router.get('/api/v1/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
+        let query
         const busqueda_api = ( req.query.busqueda ) ? req.query.busqueda : ""
-        if (busqueda_api != ""){
-            const query = ` 
+        if (busqueda_api == ""){
+            query = ` SELECT * FROM publicaciones `
+        }
+        else {
+            query = ` 
             SELECT * FROM publicaciones WHERE
             titulo LIKE '%${busqueda_api}%' OR
             resumen LIKE '%${busqueda_api}%' OR
@@ -29,25 +33,15 @@ router.get('api/v1/publicaciones', function (req, res) {
             }
             else {
                 res.status(404)
-                res.send({errors: 'No se encontraron resultados de la busqueda.'})
+                res.send({errors: ['No se encontraron resultados de la busqueda.']})
             }
         })
         connection.release()
     })
 })
 
-router.get('api/v1/publicaciones', function (req, res) {
-    pool.getConnection(function (err, connection) {
-        const query = ` SELECT * FROM publicaciones `
-        connection.query(query, function (error, filas, campos) {
-            res.status(200)
-            res.json({ data: filas })
-        })
-        connection.release()
-    })
-})
 
-router.get('api/v1/publicaciones/:id', function (req, res) {
+router.get('/api/v1/publicaciones/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(req.params.id)} `
         connection.query(query, function (error, filas, campos) {
@@ -57,14 +51,14 @@ router.get('api/v1/publicaciones/:id', function (req, res) {
             }
             else {
                 res.status(404)
-                res.send({ errors: "No se encuentra esta publicacion." })
+                res.send({ errors: ["No se encuentra esta publicacion."] })
             }
         })
         connection.release()
     })
 })
 
-router.get('api/v1/autores', function (req, res) {
+router.get('/api/v1/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM autores `
         connection.query(query, function (error, filas, campos) {
@@ -75,7 +69,7 @@ router.get('api/v1/autores', function (req, res) {
     })
 })
 
-router.get('api/v1/autores/:id', function (req, res) {
+router.get('/api/v1/autores/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` 
         SELECT autores.id id, pseudonimo, avatar, publicaciones.id publicacion_id, titulo, resumen, contenido, votos
@@ -92,14 +86,14 @@ router.get('api/v1/autores/:id', function (req, res) {
             }
             else {
                 res.status(404)
-                res.send({ errors: "No se encuentra el autor." })
+                res.send({ errors: ["No se encuentra el autor."] })
             }
         })
         connection.release()
     })
 })
 
-router.post('/api/v1/autores/', function (req, res) {
+router.post('/api/v1/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
         const email = req.body.email.toLowerCase().trim()
         const pseudonimo = req.body.pseudonimo.trim()
