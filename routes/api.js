@@ -175,7 +175,7 @@ router.post('/api/v1/publicaciones', function (req, res) {
             `
             connection.query(query, (error,filas,campos) => {
                 if (filas.length > 0) {
-                    const queryConsulta = `
+                    const insertConsulta = `
                     INSERT INTO
                     publicaciones
                     (titulo,resumen,contenido)
@@ -186,16 +186,27 @@ router.post('/api/v1/publicaciones', function (req, res) {
                         ${connection.escape(contenido)}
                     )
                     `
-                    connection.query(queryConsulta, (error,filas,campos) => {
-                        if (filas.length > 0){
+                    connection.query(insertConsulta, (error,filas,campos) => {
+                        const nuevoId = filas.insertId
+                        const queryConsulta = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(nuevoId)} `
+
+                        if (!error){
                             res.status(201)
-                            res.json({data:filas})
+                            res.json({data : filas[0]})
                         }
+
                         else {
-                            res.status(400)
-                            res.send({errors:["La publicacion no pudo ser agregada."]})
+                            res.status(404)
+                            res.send({errors: ["No se pudo agregar la publicacion."]})
                         }
+                            
+                        
+
                     })
+                }
+                else {
+                    res.status(401)
+                    res.send({errors: ["El email y la contraseña no coinciden."]})
                 }
             
             
