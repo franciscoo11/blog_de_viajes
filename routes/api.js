@@ -1,4 +1,3 @@
-const { query } = require('express')
 const express = require('express')
 const router = express.Router()
 const mysql = require('mysql')
@@ -220,5 +219,50 @@ router.post('/api/v1/publicaciones', function (req, res) {
     })   
 })
 
+router.delete('/api/v1/publicaciones/:id', function (req,res){
+    pool.getConnection(function (err,connection){
+        const email = req.query.email
+        const contrasena = req.query.contrasena
+        const id = req.params.id
+        const consulta = `
+            SELECT
+            *
+            FROM autores
+            WHERE
+            email = ${connection.escape(email)} AND 
+            contrasena = ${connection.escape(contrasena)}
+        `
+        connection.query(consulta, (error,filas,campos) => {
+            const id_autor = filas[0].id
+            if (filas.length > 0){
+                const query = ` 
+                    DELETE 
+                    FROM 
+                    publicaciones 
+                    WHERE
+                    id = ${connection.escape(id)} 
+                    AND 
+                    autor_id = ${connection.escape(id_autor)}
+                `
+                connection.query(query, (error,filas,columnas) => {
+                    if (filas && filas.affectedRows > 0){
+                        res.status(200)
+                        res.json({data : ["Publicacion eliminada"]})
+                    }
+                    else{
+                        res.status(401)
+                        res.json({errors: ["Publicacion no eliminada."]})
+                    }
+                })
+            }
+            else {
+                res.status(401)
+                res.send({errors: ["Las credenciales no son válidas."]})
+            }
+        })
+        connection.release()
+    })
+    
+})
 
 module.exports = router
