@@ -233,7 +233,6 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
             contrasena = ${connection.escape(contrasena)}
         `
         connection.query(consulta, (error,filas,campos) => {
-            const id_autor = filas[0].id
             if (filas.length > 0){
                 const query = ` 
                     DELETE 
@@ -242,7 +241,7 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
                     WHERE
                     id = ${connection.escape(id)} 
                     AND 
-                    autor_id = ${connection.escape(id_autor)}
+                    autor_id = ${connection.escape(filas[0].id)}
                 `
                 connection.query(query, (error,filas,columnas) => {
                     if (filas && filas.affectedRows > 0){
@@ -251,14 +250,11 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
                     }
                     else{
                         res.status(401)
-                        res.json({errors: ["Publicacion no eliminada."]})
+                        res.json({errors: ["Publicacion no eliminada. No posee los permisos suficientes."]})
                     }
                 })
             }
-            else {
-                res.status(401)
-                res.send({errors: ["Las credenciales no son válidas."]})
-            }
+            
         })
         connection.release()
     })
