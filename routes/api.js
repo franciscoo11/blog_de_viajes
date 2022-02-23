@@ -27,13 +27,13 @@ router.get('/api/v1/publicaciones', function (req, res) {
             `
         }
         connection.query(query, function (error, filas, campos) {
-           if (!error) {
+           if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas })
             }
             else {
                 res.status(404)
-                res.send({errors: ['No se encontraron resultados de la busqueda.']})
+                res.send({ errors: [] })
             }
         })
         connection.release()
@@ -51,7 +51,7 @@ router.get('/api/v1/publicaciones/:id', function (req, res) {
             }
             else {
                 res.status(404)
-                res.send({ errors: ["No se encuentra esta publicacion."] })
+                res.send({ errors: [] })
             }
         })
         connection.release()
@@ -62,8 +62,14 @@ router.get('/api/v1/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM autores `
         connection.query(query, function (error, filas, campos) {
-            res.status(200)
-            res.json({ data: filas })
+            if (filas.length > 0) {
+                res.status(200)
+                res.json({ data: filas })
+            }
+            else {
+                res.status(404)
+                res.send({errors: []})
+            }
         })
         connection.release()
     })
@@ -72,21 +78,21 @@ router.get('/api/v1/autores', function (req, res) {
 router.get('/api/v1/autores/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` 
-        SELECT autores.id id, pseudonimo, avatar, publicaciones.id publicacion_id, titulo, resumen, contenido, votos
-        FROM autores
-        INNER JOIN
-        publicaciones
+        SELECT
+        publicaciones.id id, titulo, resumen, fecha_hora, pseudonimo, votos, avatar
+        FROM publicaciones
+        INNER JOIN autores
         ON publicaciones.autor_id = autores.id
-        WHERE id = ${connection.escape(req.params.id)} 
+        WHERE autor_id = ${connection.escape(req.params.id)} 
         `
         connection.query(query, function (error, filas, campos) {
             if (filas.length > 0) {
                 res.status(200)
-                res.json({ data: filas[0] })
+                res.json({ data: filas })
             }
             else {
                 res.status(404)
-                res.send({ errors: ["No se encuentra el autor."] })
+                res.send({errors: ["El id ingresado no existe."] })
             }
         })
         connection.release()
@@ -106,7 +112,7 @@ router.post('/api/v1/autores', function (req, res) {
         connection.query(consultaEmail, (error, filas, campos) => {
             if (filas.length > 0) {
                 res.status(400)
-                res.send({ errors: 'El email o el pseoudonimo ya se encuentran registrados.' })
+                res.send({ errors: ['El email o el pseoudonimo ya se encuentran registrados.'] })
             }
             else {
                 const consultaPseudonimo = `
@@ -125,7 +131,7 @@ router.post('/api/v1/autores', function (req, res) {
                         INTO autores 
                         (pseudonimo, email, contrasena) 
                         VALUES
-                        (${connection.escape(email)},${connection.escape(pseudonimo)},${connection.escape(contrasena)}
+                        (${connection.escape(pseudonimo)},${connection.escape(email)},${connection.escape(contrasena)})
                         `
                         connection.query(query, function (error, filas, campos) {
                             const nuevoId = filas.insertId
@@ -153,5 +159,57 @@ router.post('/api/v1/autores', function (req, res) {
 
     })
 })
+
+router.post('/api/v1/publicaciones', function (req, res) {
+    pool.getConnection(function (err, connection) {
+        const email = req.query.email.toLowerCase().trim()
+        const contrasena = req.query.contrasena.trim()
+        const titulo = req.body.titulo
+        const resumen = req.body.resumen
+        const contenido = req.body.contenido
+        if (email && contrasena != "") {
+            const query = `
+            SELECT *
+            FROM autores
+            WHERE email = ${connection.escape(email)} AND contrasena = ${connection.escape(contrasena)}
+            `
+            connection.query(query, (error,filas,campos) => {
+                if (filas.length > 0) {
+                    const queryConsulta = `
+                    INSERT INTO
+                    publicaciones
+                    (titulo,resumen,contenido)
+                    VALUES
+                    (
+                        ${connection.escape(titulo)},
+                        ${connection.escape(resumen)},
+                        ${connection.escape(contenido)}
+                    )
+                    `
+                    connection.query(queryConsulta, (error,filas,campos) => {
+                        if (filas.length > 0){
+                            res.status(201)
+                            res.json({data:filas})
+                        }
+                        else {
+                            res.status(400)
+                            res.send({errors:["La publicacion no pudo ser agregada."]})
+                        }
+                    })
+                }
+            
+            
+            
+            })
+    
+        }    
+        
+    
+    
+    
+    
+    })   
+})
+
 
 module.exports = router
