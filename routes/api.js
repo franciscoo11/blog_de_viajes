@@ -1,3 +1,4 @@
+const { query } = require('express')
 const express = require('express')
 const router = express.Router()
 const mysql = require('mysql')
@@ -112,7 +113,7 @@ router.post('/api/v1/autores', function (req, res) {
         connection.query(consultaEmail, (error, filas, campos) => {
             if (filas.length > 0) {
                 res.status(400)
-                res.send({ errors: ['El email o el pseoudonimo ya se encuentran registrados.'] })
+                res.send({ errors: ['El email ya se encuentran registrados.'] })
             }
             else {
                 const consultaPseudonimo = `
@@ -123,7 +124,7 @@ router.post('/api/v1/autores', function (req, res) {
                 connection.query(consultaPseudonimo, (error, filas, campos) => {
                     if (filas.length > 0) {
                         res.status(400)
-                        res.send({ errors: 'El email o el pseoudonimo ya se encuentran registrados.' })
+                        res.send({ errors: ['El pseoudonimo ya se encuentran registrados.'] })
                     }
                     else {
                         const query = `
@@ -162,61 +163,58 @@ router.post('/api/v1/autores', function (req, res) {
 
 router.post('/api/v1/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
-        const email = req.query.email.toLowerCase().trim()
-        const contrasena = req.query.contrasena.trim()
+        const email = req.query.email
+        const contrasena = req.query.contrasena
         const titulo = req.body.titulo
         const resumen = req.body.resumen
         const contenido = req.body.contenido
-        if (email && contrasena != "") {
-            const query = `
+        
+        const consulta = `
             SELECT *
             FROM autores
-            WHERE email = ${connection.escape(email)} AND contrasena = ${connection.escape(contrasena)}
-            `
-            connection.query(query, (error,filas,campos) => {
-                if (filas.length > 0) {
-                    const insertConsulta = `
-                    INSERT INTO
-                    publicaciones
-                    (titulo,resumen,contenido)
+            WHERE 
+            email = ${connection.escape(email)} AND 
+            contrasena = ${connection.escape(contrasena)}
+        `
+        connection.query(consulta, (error,filas,campos) => {
+            id_autor = filas[0].id
+            if (filas.length > 0){
+                const insertConsulta = `
+                    INSERT 
+                    INTO publicaciones
+                    (titulo, resumen, contenido, autor_id)
                     VALUES
-                    (
-                        ${connection.escape(titulo)},
-                        ${connection.escape(resumen)},
-                        ${connection.escape(contenido)}
-                    )
+                    (${connection.escape(titulo)},${connection.escape(resumen)},${connection.escape(contenido)}, ${connection.escape(id_autor)})
+                `
+                connection.query(insertConsulta, (error,filas,campos) => {
+                    const idPublicacion = filas.insertId
+                    const queryPublicacion = `
+                        SELECT 
+                        titulo, resumen, contenido
+                        FROM publicaciones
+                        WHERE id = ${connection.escape(idPublicacion)}
                     `
-                    connection.query(insertConsulta, (error,filas,campos) => {
-                        const nuevoId = filas.insertId
-                        const queryConsulta = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(nuevoId)} `
-
-                        if (!error){
-                            res.status(201)
-                            res.json({data : filas[0]})
-                        }
-
-                        else {
-                            res.status(404)
-                            res.send({errors: ["No se pudo agregar la publicacion."]})
-                        }
-                            
-                        
-
+                    connection.query(queryPublicacion, (error,filas,columnas) => {
+                        res.status(201)
+                        res.json({data: filas[0]})
                     })
-                }
-                else {
-                    res.status(401)
-                    res.send({errors: ["El email y la contraseña no coinciden."]})
-                }
+                    
+                })
+
+                
+            }
+            else  {
+                res.status(401)
+                res.send({errors: ["El email y la contraseña no coinciden."]})
+            }
+                    
+                
             
             
             
-            })
-    
-        }    
-        
-    
-    
+        })
+        connection.release()
+            
     
     
     })   
