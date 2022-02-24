@@ -14,7 +14,7 @@ router.get('/api/v1/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
         let query
         const busqueda_api = ( req.query.busqueda ) ? req.query.busqueda : ""
-        if (busqueda_api != ""){
+        if (busqueda_api != "" || busqueda_api != ''){
             query = ` 
             SELECT * FROM publicaciones WHERE
             titulo LIKE '%${busqueda_api}%' OR
@@ -25,7 +25,10 @@ router.get('/api/v1/publicaciones', function (req, res) {
         }
         query = ` SELECT * FROM publicaciones `
         connection.query(query, function (error, filas, campos) {
-           if (filas.length > 0) {
+            if (error){
+                return error
+            }
+            if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas })
             }
@@ -41,6 +44,9 @@ router.get('/api/v1/publicaciones/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(req.params.id)} `
         connection.query(query, function (error, filas, campos) {
+            if (error){
+                return error
+            }
             if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas[0] })
@@ -56,6 +62,9 @@ router.get('/api/v1/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM autores `
         connection.query(query, function (error, filas, campos) {
+            if (error){
+                return error
+            }
             if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas })
@@ -78,6 +87,9 @@ router.get('/api/v1/autores/:id', function (req, res) {
         WHERE autor_id = ${connection.escape(req.params.id)} 
         `
         connection.query(query, function (error, filas, campos) {
+            if (error) {
+                return error
+            }
             if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas })
@@ -100,6 +112,9 @@ router.post('/api/v1/autores', function (req, res) {
             WHERE email = ${connection.escape(email)}
         `
         connection.query(consultaEmail, (error, filas, campos) => {
+            if (error){
+                return error
+            }
             if (filas.length > 0) {
                 res.status(400)
                 res.send({ errors: ['El email ya se encuentran registrados.'] })
@@ -110,6 +125,9 @@ router.post('/api/v1/autores', function (req, res) {
                 WHERE pseudonimo = ${connection.escape(pseudonimo)}
             `
             connection.query(consultaPseudonimo, (error, filas, campos) => {
+                if (error) {
+                    return error
+                }
                 if (filas.length > 0) {
                     res.status(400)
                     res.send({ errors: ['El pseoudonimo ya se encuentran registrados.'] })
@@ -122,8 +140,10 @@ router.post('/api/v1/autores', function (req, res) {
                     (${connection.escape(pseudonimo)},${connection.escape(email)},${connection.escape(contrasena)})
                 `
                 connection.query(query, function (error, filas, campos) {
+                    if (error) {
+                        return error
+                    }
                     const queryConsulta = ` SELECT * FROM autores WHERE email = ${connection.escape(email)} `
-
                     connection.query(queryConsulta, function (error, filas, columnas) {
                         res.status(201)
                         res.json({ data: filas[0] })
@@ -155,6 +175,9 @@ router.post('/api/v1/publicaciones', function (req, res) {
             contrasena = ${connection.escape(contrasena)}
         `
         connection.query(consulta, (error,filas,campos) => {
+            if (error){
+                return error
+            }
             id_autor = filas[0].id
             if (filas.length > 0){
                 const insertConsulta = `
@@ -165,12 +188,14 @@ router.post('/api/v1/publicaciones', function (req, res) {
                     (${connection.escape(titulo)},${connection.escape(resumen)},${connection.escape(contenido)}, ${connection.escape(id_autor)})
                 `
                 connection.query(insertConsulta, (error,filas,campos) => {
-                const queryPublicacion = `
-                    SELECT 
-                    titulo, resumen, contenido
-                    FROM publicaciones
-                    WHERE titulo = ${connection.escape(titulo)}
-                `
+                    if (error){
+                        return error
+                    }
+                    const queryPublicacion = `
+                        SELECT 
+                        titulo, resumen, contenido
+                        FROM publicaciones
+                        WHERE titulo = ${connection.escape(titulo)}`
                     connection.query(queryPublicacion, (error,filas,columnas) => {
                         res.status(201)
                         res.json({data: filas[0]})
@@ -200,6 +225,9 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
             contrasena = ${connection.escape(contrasena)}
         `
         connection.query(consulta, (error,filas,campos) => {
+            if (error){
+                return error
+            }
             autor_id = filas[0].id
             if (filas.length > 0){
                 const query = ` 
@@ -212,6 +240,9 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
                     autor_id = ${connection.escape(autor_id)}
                 `
                 connection.query(query, (error,filas,columnas) => {
+                    if (error){
+                        return error
+                    }
                     if (filas && filas.affectedRows > 0){
                         res.status(200)
                         res.json({data : ["Publicacion eliminada"]})
