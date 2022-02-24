@@ -23,17 +23,25 @@ router.get('/api/v1/publicaciones', function (req, res) {
             ORDER BY fecha_hora DESC
             `
         }
-        query = ` SELECT * FROM publicaciones `
+        query = `sSELECT * FROM publicaciones`
         connection.query(query, function (error, filas, campos) {
             if (error){
-                return error
+                res.status(500)
+                res.send({ error: {
+                    codigo: error.code, 
+                    mensaje: "error al buscar la informacion solicitada"
+                }})
+                return
             }
+
             if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas })
             }
-            res.status(404)
-            res.send({ errors: [] })
+            else {
+                res.status(404)
+                res.send({ errors: [] })
+            }
         })
         connection.release()
     })
@@ -52,7 +60,10 @@ router.get('/api/v1/publicaciones/:id', function (req, res) {
                 res.json({ data: filas[0] })
             }
             res.status(404)
-            res.send({ errors: [] })
+            res.send({ error: {
+                codigo: "NOT_FOUND", 
+                mensaje: "No se encontro una publicacion con el id proporcionado"
+            }})
         })
         connection.release()
     })
