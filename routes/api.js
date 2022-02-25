@@ -39,7 +39,10 @@ router.get('/api/v1/publicaciones', function (req, res) {
             }
             else {
                 res.status(404)
-                res.send({ errors: [] })
+                res.send({ error: {
+                    codigo: "NOT_FOUND", 
+                    mensaje: "No se encontro ninguna publicación."
+                }})
             }
         })
         connection.release()
@@ -55,7 +58,7 @@ router.get('/api/v1/publicaciones/:id', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la informacion solicitada"
+                    mensaje: "error al buscar la información solicitada"
                 }})
                 return
             }
@@ -66,7 +69,7 @@ router.get('/api/v1/publicaciones/:id', function (req, res) {
             res.status(404)
             res.send({ error: {
                 codigo: "NOT_FOUND", 
-                mensaje: "No se encontro una publicacion con el id proporcionado"
+                mensaje: "No se encontro ninguna publicación."
             }})
         })
         connection.release()
@@ -81,7 +84,7 @@ router.get('/api/v1/autores', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la informacion solicitada"
+                    mensaje: "error al buscar la información solicitada"
                 }})
                 return
             }
@@ -93,7 +96,7 @@ router.get('/api/v1/autores', function (req, res) {
                 res.status(404)
                 res.send({errors: {
                     codigo: "NOT_FOUND", 
-                    mensaje: "No se encontro ningun autor."
+                    mensaje: "No se encontro ningún autor."
                 }})
             }
         })
@@ -116,7 +119,7 @@ router.get('/api/v1/autores/:id', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la informacion solicitada"
+                    mensaje: "error al buscar la información solicitada"
                 }})
                 return
             }
@@ -141,17 +144,18 @@ router.post('/api/v1/autores', function (req, res) {
         const email = req.body.email.toLowerCase().trim()
         const pseudonimo = req.body.pseudonimo.toLowerCase().trim()
         const contrasena = req.body.contrasena
-        const consultaEmail = `
+        let query
+        query = `
             SELECT *
             FROM autores
             WHERE email = ${connection.escape(email)}
         `
-        connection.query(consultaEmail, (error, filas, campos) => {
+        connection.query(query, (error, filas, campos) => {
             if (error){
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la informacion solicitada"
+                    mensaje: "error al buscar la información solicitada"
                 }})
                 return
             }
@@ -159,7 +163,7 @@ router.post('/api/v1/autores', function (req, res) {
                 res.status(422)
                 res.send({ errors: ['El email ya se encuentran registrados.'] })
             }
-            const consultaPseudonimo = `
+            query = `
                 SELECT *
                 FROM autores
                 WHERE pseudonimo = ${connection.escape(pseudonimo)}
@@ -169,7 +173,7 @@ router.post('/api/v1/autores', function (req, res) {
                     res.status(500)
                     res.send({ error: {
                         codigo: error.code, 
-                        mensaje: "error al buscar la informacion solicitada"
+                        mensaje: "error al buscar la información solicitada"
                     }})
                     return
                 }
@@ -177,7 +181,7 @@ router.post('/api/v1/autores', function (req, res) {
                     res.status(422)
                     res.send({ errors: ['El pseoudonimo ya se encuentran registrados.'] })
                 }
-                const query = `
+                query = `
                     INSERT 
                     INTO autores 
                     (pseudonimo, email, contrasena) 
@@ -189,7 +193,7 @@ router.post('/api/v1/autores', function (req, res) {
                         res.status(500)
                         res.send({ error: {
                             codigo: error.code, 
-                            mensaje: "error al insertar la informacion."
+                            mensaje: "error al insertar la información."
                         }})
                         return
                     }
@@ -205,7 +209,7 @@ router.post('/api/v1/autores', function (req, res) {
                         res.status(403)
                         res.send({ errors: {
                             codigo: "BODY_WRONG",
-                            mensaje: "error verifica la informacion enviada en el cuerpo."
+                            mensaje: "error verifica la información enviada en el cuerpo."
                         }})
                     }
                 })
@@ -235,7 +239,7 @@ router.post('/api/v1/publicaciones', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la informacion."
+                    mensaje: "error al buscar la información."
                 }})
                 return
             }
@@ -268,7 +272,7 @@ router.post('/api/v1/publicaciones', function (req, res) {
                     else {
                         res.status(403)
                         res.send({ errors: {
-                        mensaje: "error verifica la informacion enviada en el cuerpo."
+                        mensaje: "error verifica la información enviada en el cuerpo."
                         }})
                     }
                 })
@@ -302,7 +306,7 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la informacion."
+                    mensaje: "error al buscar la información."
                 }})
                 return
             }
@@ -322,17 +326,17 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
                         res.status(500)
                         res.send({ error: {
                             codigo: error.code, 
-                            mensaje: "error al buscar la informacion."
+                            mensaje: "error al buscar la información."
                         }})
                         return
                     }
                     if (filas && filas.affectedRows > 0){
                         res.status(200)
-                        res.json({data : ["Publicacion eliminada"]})
+                        res.json({data : ["Publicación eliminada"]})
                     }
                     else {
                         res.status(401)
-                        res.json({errors: ["La publicacion no fue eliminada."]})
+                        res.json({errors: ["El id ingresado no corresponde. Por lo tanto no se realizo la acción."]})
                     }
                 })
             }
