@@ -161,14 +161,16 @@ router.post('/api/v1/autores', function (req, res) {
             }
             if (filas.length > 0) {
                 res.status(422)
-                res.send({ errors: ['El email ya se encuentran registrados.'] })
+                res.send({ errors: ['El email ya se encuentra registrado.'] })
             }
-            query = `
+            else {
+                query = `
                 SELECT *
                 FROM autores
                 WHERE pseudonimo = ${connection.escape(pseudonimo)}
-            `
-            connection.query(consultaPseudonimo, (error, filas, campos) => {
+                `
+            }
+            connection.query(query, (error, filas, campos) => {
                 if (error){
                     res.status(500)
                     res.send({ error: {
@@ -179,7 +181,8 @@ router.post('/api/v1/autores', function (req, res) {
                 }
                 if (filas.length > 0) {
                     res.status(422)
-                    res.send({ errors: ['El pseoudonimo ya se encuentran registrados.'] })
+                    res.send({ errors: ['El pseoudonimo ya se encuentra registrado.'] })
+                    return
                 }
                 query = `
                     INSERT 
