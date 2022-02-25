@@ -91,7 +91,10 @@ router.get('/api/v1/autores', function (req, res) {
             }
             else {
                 res.status(404)
-                res.send({errors: ["No se encontraron autores"]})
+                res.send({errors: {
+                    codigo: "NOT_FOUND", 
+                    mensaje: "No se encontro ningun autor."
+                }})
             }
         })
         connection.release()
@@ -121,8 +124,13 @@ router.get('/api/v1/autores/:id', function (req, res) {
                 res.status(200)
                 res.json({ data: filas })
             }
-            res.status(407)
-            res.send({errors: ["El autor no existe."] })
+            else {
+                res.status(407)
+                res.send({errors: {
+                    codigo: "NOT_EXIST", 
+                    mensaje: "El autor no existe."
+                }})
+            }
         })
         connection.release()
     })
@@ -148,7 +156,7 @@ router.post('/api/v1/autores', function (req, res) {
                 return
             }
             if (filas.length > 0) {
-                res.status(406)
+                res.status(422)
                 res.send({ errors: ['El email ya se encuentran registrados.'] })
             }
             const consultaPseudonimo = `
@@ -166,7 +174,7 @@ router.post('/api/v1/autores', function (req, res) {
                     return
                 }
                 if (filas.length > 0) {
-                    res.status(404)
+                    res.status(422)
                     res.send({ errors: ['El pseoudonimo ya se encuentran registrados.'] })
                 }
                 const query = `
@@ -177,6 +185,7 @@ router.post('/api/v1/autores', function (req, res) {
                     (${connection.escape(pseudonimo)},${connection.escape(email)},${connection.escape(contrasena)})
                 `
                 connection.query(query, function (error, filas, campos) {
+                    const autor_id = filas[0].id
                     if (error){
                         res.status(500)
                         res.send({ error: {
@@ -187,11 +196,17 @@ router.post('/api/v1/autores', function (req, res) {
                     }
                     if (filas && filas.affectedRows > 0){
                         res.status(201)
-                        res.json({ data: filas[0] })
+                        res.json({ data: {
+                            email: email, 
+                            pseudonimo: pseudonimo,
+                            contrasena: contrasena,
+                            id: autor_id
+                        }})
                     }
                     else{
                         res.status(403)
                         res.send({ errors: {
+                            codigo: "BODY_WRONG",
                             mensaje: "error verifica la informacion enviada en el cuerpo."
                         }})
                     }
@@ -328,7 +343,6 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
         })
         connection.release()
     })
-
 })
 
 module.exports = router
