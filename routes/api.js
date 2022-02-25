@@ -194,13 +194,11 @@ router.post('/api/v1/autores', function (req, res) {
                         return
                     }
                     if (filas && filas.affectedRows > 0){
-                        const autor_id = filas[0].id
                         res.status(201)
                         res.json({ data: {
                             email: email, 
                             pseudonimo: pseudonimo,
                             contrasena: contrasena,
-                            id: autor_id
                         }})
                     }
                     else{
