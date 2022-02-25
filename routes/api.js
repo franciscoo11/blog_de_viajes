@@ -13,8 +13,9 @@ var pool = mysql.createPool({
 router.get('/api/v1/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
         let query
-        const busqueda_api = ( req.query.busqueda ) ? req.query.busqueda : ""
-        if (busqueda_api != "" || busqueda_api != ''){
+        const busqueda_api = ( req.query.busqueda ) ? connection.escape(req.query.busqueda) : ""
+        query = `SELECT * FROM publicaciones`
+        if (busqueda_api != ""){
             query = ` 
             SELECT * FROM publicaciones WHERE
             titulo LIKE '%${busqueda_api}%' OR
@@ -23,7 +24,6 @@ router.get('/api/v1/publicaciones', function (req, res) {
             ORDER BY fecha_hora DESC
             `
         }
-        query = `sSELECT * FROM publicaciones`
         connection.query(query, function (error, filas, campos) {
             if (error){
                 res.status(500)
@@ -33,7 +33,6 @@ router.get('/api/v1/publicaciones', function (req, res) {
                 }})
                 return
             }
-
             if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas })
@@ -53,7 +52,12 @@ router.get('/api/v1/publicaciones/:id', function (req, res) {
         const query = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(req.params.id)} `
         connection.query(query, function (error, filas, campos) {
             if (error){
-                return error
+                res.status(500)
+                res.send({ error: {
+                    codigo: error.code, 
+                    mensaje: "error al buscar la informacion solicitada"
+                }})
+                return
             }
             if (filas.length > 0) {
                 res.status(200)
@@ -74,14 +78,21 @@ router.get('/api/v1/autores', function (req, res) {
         const query = ` SELECT * FROM autores `
         connection.query(query, function (error, filas, campos) {
             if (error){
-                return error
+                res.status(500)
+                res.send({ error: {
+                    codigo: error.code, 
+                    mensaje: "error al buscar la informacion solicitada"
+                }})
+                return
             }
             if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas })
             }
-            res.status(404)
-            res.send({errors: []})
+            else {
+                res.status(404)
+                res.send({errors: ["No se encontraron autores"]})
+            }
         })
         connection.release()
     })
@@ -98,15 +109,20 @@ router.get('/api/v1/autores/:id', function (req, res) {
         WHERE autor_id = ${connection.escape(req.params.id)} 
         `
         connection.query(query, function (error, filas, campos) {
-            if (error) {
-                return error
+            if (error){
+                res.status(500)
+                res.send({ error: {
+                    codigo: error.code, 
+                    mensaje: "error al buscar la informacion solicitada"
+                }})
+                return
             }
             if (filas.length > 0) {
                 res.status(200)
                 res.json({ data: filas })
             }
-            res.status(404)
-            res.send({errors: ["El id ingresado no existe."] })
+            res.status(407)
+            res.send({errors: ["El autor no existe."] })
         })
         connection.release()
     })
@@ -124,10 +140,15 @@ router.post('/api/v1/autores', function (req, res) {
         `
         connection.query(consultaEmail, (error, filas, campos) => {
             if (error){
-                return error
+                res.status(500)
+                res.send({ error: {
+                    codigo: error.code, 
+                    mensaje: "error al buscar la informacion solicitada"
+                }})
+                return
             }
             if (filas.length > 0) {
-                res.status(400)
+                res.status(406)
                 res.send({ errors: ['El email ya se encuentran registrados.'] })
             }
             const consultaPseudonimo = `
@@ -136,11 +157,16 @@ router.post('/api/v1/autores', function (req, res) {
                 WHERE pseudonimo = ${connection.escape(pseudonimo)}
             `
             connection.query(consultaPseudonimo, (error, filas, campos) => {
-                if (error) {
-                    return error
+                if (error){
+                    res.status(500)
+                    res.send({ error: {
+                        codigo: error.code, 
+                        mensaje: "error al buscar la informacion solicitada"
+                    }})
+                    return
                 }
                 if (filas.length > 0) {
-                    res.status(400)
+                    res.status(404)
                     res.send({ errors: ['El pseoudonimo ya se encuentran registrados.'] })
                 }
                 const query = `
@@ -151,20 +177,27 @@ router.post('/api/v1/autores', function (req, res) {
                     (${connection.escape(pseudonimo)},${connection.escape(email)},${connection.escape(contrasena)})
                 `
                 connection.query(query, function (error, filas, campos) {
-                    if (error) {
-                        return error
+                    if (error){
+                        res.status(500)
+                        res.send({ error: {
+                            codigo: error.code, 
+                            mensaje: "error al insertar la informacion."
+                        }})
+                        return
                     }
-                    const queryConsulta = ` SELECT * FROM autores WHERE email = ${connection.escape(email)} `
-                    connection.query(queryConsulta, function (error, filas, columnas) {
+                    if (filas && filas.affectedRows > 0){
                         res.status(201)
                         res.json({ data: filas[0] })
-                    })
-
+                    }
+                    else{
+                        res.status(403)
+                        res.send({ errors: {
+                            mensaje: "error verifica la informacion enviada en el cuerpo."
+                        }})
+                    }
                 })
-                connection.release()
-                    
+                connection.release()  
             })    
-
         })
     
     })
@@ -187,10 +220,15 @@ router.post('/api/v1/publicaciones', function (req, res) {
         `
         connection.query(consulta, (error,filas,campos) => {
             if (error){
-                return error
+                res.status(500)
+                res.send({ error: {
+                    codigo: error.code, 
+                    mensaje: "error al buscar la informacion."
+                }})
+                return
             }
-            id_autor = filas[0].id
             if (filas.length > 0){
+                const id_autor = filas[0].id
                 const insertConsulta = `
                     INSERT 
                     INTO publicaciones
@@ -200,23 +238,36 @@ router.post('/api/v1/publicaciones', function (req, res) {
                 `
                 connection.query(insertConsulta, (error,filas,campos) => {
                     if (error){
-                        return error
+                        res.status(500)
+                        res.send({ error: {
+                            codigo: error.code, 
+                            mensaje: "error al insertar la informacion."
+                        }})
+                        return
                     }
-                    const queryPublicacion = `
-                        SELECT 
-                        titulo, resumen, contenido
-                        FROM publicaciones
-                        WHERE titulo = ${connection.escape(titulo)}`
-                    connection.query(queryPublicacion, (error,filas,columnas) => {
+                    if (filas && filas.affectedRows > 0){
                         res.status(201)
-                        res.json({data: filas[0]})
-                    })
+                        res.json({data: {
+                            titulo: titulo,
+                            resumen: resumen,
+                            contenido: contenido,
+                            id_autor: id_autor
+                        }})
+                    }
+                    else {
+                        res.status(403)
+                        res.send({ errors: {
+                        mensaje: "error verifica la informacion enviada en el cuerpo."
+                        }})
+                    }
                 })
-
             }
-            res.status(401)
-            res.send({errors: ["El email y la contraseña no coinciden."]})
-        
+            else{
+                res.status(417)
+                res.send({ errors: {
+                    mensaje: "Las credenciales no son validas."
+                }})
+            }
         })
         connection.release()
     })   
@@ -237,10 +288,15 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
         `
         connection.query(consulta, (error,filas,campos) => {
             if (error){
-                return error
+                res.status(500)
+                res.send({ error: {
+                    codigo: error.code, 
+                    mensaje: "error al buscar la informacion."
+                }})
+                return
             }
-            autor_id = filas[0].id
             if (filas.length > 0){
+                autor_id = filas[0].id
                 const query = ` 
                     DELETE 
                     FROM 
@@ -252,22 +308,27 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
                 `
                 connection.query(query, (error,filas,columnas) => {
                     if (error){
-                        return error
+                        res.status(500)
+                        res.send({ error: {
+                            codigo: error.code, 
+                            mensaje: "error al buscar la informacion."
+                        }})
+                        return
                     }
                     if (filas && filas.affectedRows > 0){
                         res.status(200)
                         res.json({data : ["Publicacion eliminada"]})
                     }
-                    res.status(401)
-                    res.json({errors: [""]})
-                    
+                    else {
+                        res.status(401)
+                        res.json({errors: ["La publicacion no fue eliminada."]})
+                    }
                 })
             }
-            
         })
         connection.release()
     })
-    
+
 })
 
 module.exports = router
