@@ -185,7 +185,6 @@ router.post('/api/v1/autores', function (req, res) {
                     (${connection.escape(pseudonimo)},${connection.escape(email)},${connection.escape(contrasena)})
                 `
                 connection.query(query, function (error, filas, campos) {
-                    const autor_id = filas[0].id
                     if (error){
                         res.status(500)
                         res.send({ error: {
@@ -195,6 +194,7 @@ router.post('/api/v1/autores', function (req, res) {
                         return
                     }
                     if (filas && filas.affectedRows > 0){
+                        const autor_id = filas[0].id
                         res.status(201)
                         res.json({ data: {
                             email: email, 
@@ -214,7 +214,6 @@ router.post('/api/v1/autores', function (req, res) {
                 connection.release()  
             })    
         })
-    
     })
 })
 
@@ -265,8 +264,7 @@ router.post('/api/v1/publicaciones', function (req, res) {
                         res.json({data: {
                             titulo: titulo,
                             resumen: resumen,
-                            contenido: contenido,
-                            id_autor: id_autor
+                            contenido: contenido
                         }})
                     }
                     else {
@@ -311,7 +309,7 @@ router.delete('/api/v1/publicaciones/:id', function (req,res){
                 return
             }
             if (filas.length > 0){
-                autor_id = filas[0].id
+                const autor_id = filas[0].id
                 const query = ` 
                     DELETE 
                     FROM 
