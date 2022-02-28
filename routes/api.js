@@ -10,7 +10,7 @@ var pool = mysql.createPool({
     database: 'blog_viajes'
 })
 
-router.get('/api/v1/publicaciones', function (req, res) {
+router.get('/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
         let query
         const busqueda_api = ( req.query.busqueda ) ? connection.escape(req.query.busqueda) : ""
@@ -50,7 +50,7 @@ router.get('/api/v1/publicaciones', function (req, res) {
 })
 
 
-router.get('/api/v1/publicaciones/:id', function (req, res) {
+router.get('/publicaciones/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(req.params.id)} `
         connection.query(query, function (error, filas, campos) {
@@ -76,7 +76,7 @@ router.get('/api/v1/publicaciones/:id', function (req, res) {
     })
 })
 
-router.get('/api/v1/autores', function (req, res) {
+router.get('/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM autores `
         connection.query(query, function (error, filas, campos) {
@@ -104,7 +104,7 @@ router.get('/api/v1/autores', function (req, res) {
     })
 })
 
-router.get('/api/v1/autores/:id', function (req, res) {
+router.get('/autores/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` 
         SELECT
@@ -139,7 +139,7 @@ router.get('/api/v1/autores/:id', function (req, res) {
     })
 })
 
-router.post('/api/v1/autores', function (req, res) {
+router.post('/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
         const email = req.body.email.toLowerCase().trim()
         const pseudonimo = req.body.pseudonimo.toLowerCase().trim()
@@ -222,7 +222,7 @@ router.post('/api/v1/autores', function (req, res) {
     })
 })
 
-router.post('/api/v1/publicaciones', function (req, res) {
+router.post('/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
         const email = req.query.email.toLowerCase().trim()
         const contrasena = req.query.contrasena
@@ -291,7 +291,7 @@ router.post('/api/v1/publicaciones', function (req, res) {
     })   
 })
 
-router.delete('/api/v1/publicaciones/:id', function (req,res){
+router.delete('/publicaciones/:id', function (req,res){
     pool.getConnection(function (err,connection){
         const email = req.query.email.toLowerCase().trim()
         const contrasena = req.query.contrasena
