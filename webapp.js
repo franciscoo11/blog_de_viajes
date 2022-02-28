@@ -21,7 +21,7 @@ aplicacion.use(fileUpload())
 aplicacion.use(rutasMiddleware)
 aplicacion.use(rutasPublics)
 aplicacion.use(rutasPrivates)
-aplicacion.use(rutasApi)
+aplicacion.use('/api', rutasApi)
 
 aplicacion.listen(8080, () => {
   console.log("Servidor iniciado")
