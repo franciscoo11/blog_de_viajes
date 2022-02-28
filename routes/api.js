@@ -10,7 +10,7 @@ var pool = mysql.createPool({
     database: 'blog_viajes'
 })
 
-router.get('api/v1/publicaciones', function (req, res) {
+router.get('/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
         const busqueda_api = ( req.query.busqueda ) ? req.query.busqueda : ""
         if (busqueda_api != ""){
@@ -36,7 +36,7 @@ router.get('api/v1/publicaciones', function (req, res) {
     })
 })
 
-router.get('api/v1/publicaciones', function (req, res) {
+router.get('/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM publicaciones `
         connection.query(query, function (error, filas, campos) {
@@ -47,7 +47,7 @@ router.get('api/v1/publicaciones', function (req, res) {
     })
 })
 
-router.get('api/v1/publicaciones/:id', function (req, res) {
+router.get('/publicaciones/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(req.params.id)} `
         connection.query(query, function (error, filas, campos) {
@@ -64,7 +64,7 @@ router.get('api/v1/publicaciones/:id', function (req, res) {
     })
 })
 
-router.get('api/v1/autores', function (req, res) {
+router.get('/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM autores `
         connection.query(query, function (error, filas, campos) {
@@ -75,7 +75,7 @@ router.get('api/v1/autores', function (req, res) {
     })
 })
 
-router.get('api/v1/autores/:id', function (req, res) {
+router.get('/autores/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` 
         SELECT autores.id id, pseudonimo, avatar, publicaciones.id publicacion_id, titulo, resumen, contenido, votos
@@ -99,7 +99,7 @@ router.get('api/v1/autores/:id', function (req, res) {
     })
 })
 
-router.post('/api/v1/autores/', function (req, res) {
+router.post('/autores/', function (req, res) {
     pool.getConnection(function (err, connection) {
         const email = req.body.email.toLowerCase().trim()
         const pseudonimo = req.body.pseudonimo.trim()
