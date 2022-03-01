@@ -51,7 +51,12 @@ router.get('/publicaciones', function (req, res) {
 
 router.get('/publicaciones/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
-        const query = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(req.params.id)} `
+        const query = ` 
+        SELECT 
+        * 
+        FROM publicaciones 
+        WHERE id = ${connection.escape(req.params.id)} 
+        `
         connection.query(query, function (error, filas, campos) {
             if (error){
                 res.status(500)
@@ -65,11 +70,14 @@ router.get('/publicaciones/:id', function (req, res) {
                 res.status(200)
                 res.json({ data: filas[0] })
             }
-            res.status(404)
-            res.send({ error: {
-                codigo: "NOT_FOUND", 
-                mensaje: "No se encontro ninguna publicación."
-            }})
+            else{
+                res.status(404)
+                res.send({ error: {
+                    codigo: "NOT_FOUND", 
+                    mensaje: "No se encontro ninguna publicación."
+                }})
+            }
+            
         })
         connection.release()
     })
@@ -130,7 +138,7 @@ router.get('/autores/:id', function (req, res) {
                 res.status(404)
                 res.send({errors: {
                     codigo: "NOT_FOUND", 
-                    mensaje: "El autor ingresado no es válido."
+                    mensaje: "El autor ingresado no es válido o no posee publicaciones."
                 }})
             }
         })
