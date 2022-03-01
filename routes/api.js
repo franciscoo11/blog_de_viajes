@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const mysql = require('mysql')
+const utils = require('../utils')
 
 var pool = mysql.createPool({
     connectionLimit: 20,
@@ -49,7 +50,6 @@ router.get('/publicaciones', function (req, res) {
     })
 })
 
-
 router.get('/publicaciones/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM publicaciones WHERE id = ${connection.escape(req.params.id)} `
@@ -76,21 +76,9 @@ router.get('/publicaciones/:id', function (req, res) {
     })
 })
 
-router.get('/autores/:id', function (req, res) {
+router.get('/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
-        let query
-        const idAutor = ( req.params.id ) ? connection.escape(req.params.id) : ""
-        query = ` SELECT * FROM autores `
-        if (idAutor != ""){
-            query = ` 
-            SELECT
-            publicaciones.id id, titulo, resumen, fecha_hora, pseudonimo, votos, avatar
-            FROM publicaciones
-            INNER JOIN autores
-            ON publicaciones.autor_id = autores.id
-            WHERE autor_id = ${connection.escape(req.params.id)} 
-            `
-        }
+        const query = ` SELECT * FROM autores `
         connection.query(query, function (error, filas, campos) {
             if (error){
                 res.status(500)
@@ -109,6 +97,41 @@ router.get('/autores/:id', function (req, res) {
                 res.send({errors: {
                     codigo: "NOT_FOUND", 
                     mensaje: "No se encontro ningún autor."
+                }})
+            }
+        })
+        connection.release()
+    })
+})
+
+router.get('/autores/:id', function (req, res) {
+    pool.getConnection(function (err, connection) {
+        const query = ` 
+        SELECT
+        publicaciones.id id, titulo, resumen, fecha_hora, pseudonimo, votos, avatar
+        FROM publicaciones
+        INNER JOIN autores
+        ON publicaciones.autor_id = autores.id
+        WHERE autor_id = ${connection.escape(req.params.id)} 
+        `
+        connection.query(query, function (error, filas, campos) {
+            if (error){
+                res.status(500)
+                res.send({ error: {
+                    codigo: error.code, 
+                    mensaje: "error al buscar la información solicitada"
+                }})
+                return
+            }
+            if (filas.length > 0) {
+                res.status(200)
+                res.json({ data: filas })
+            }
+            else {
+                res.status(404)
+                res.send({errors: {
+                    codigo: "NOT_FOUND", 
+                    mensaje: "El autor ingresado no es válido."
                 }})
             }
         })
@@ -201,20 +224,12 @@ router.post('/autores', function (req, res) {
 
 router.post('/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
-        const email = req.query.email.toLowerCase().trim()
+        const email = req.query.email
         const contrasena = req.query.contrasena
         const titulo = req.body.titulo
         const resumen = req.body.resumen
         const contenido = req.body.contenido
-        
-        const consulta = `
-            SELECT *
-            FROM autores
-            WHERE 
-            email = ${connection.escape(email)} AND 
-            contrasena = ${connection.escape(contrasena)}
-        `
-        connection.query(consulta, (error,filas,campos) => {
+        idAutor,error = utils.obtenerAutorSegunCredenciales(connection,email,contrasena)
             if (error){
                 res.status(500)
                 res.send({ error: {
@@ -223,8 +238,7 @@ router.post('/publicaciones', function (req, res) {
                 }})
                 return
             }
-            if (filas.length > 0){
-                const id_autor = filas[0].id
+            if (idAutor > 0){
                 const insertConsulta = `
                     INSERT 
                     INTO publicaciones
@@ -242,11 +256,15 @@ router.post('/publicaciones', function (req, res) {
                         return
                     }
                     if (filas && filas.affectedRows > 0){
+                        const idPublicacion = filas[0].insertId
+                        console.log(idPublicacion)
+                        //const idPublicacion = filas[0].id ---> VERIFICAR COMO OBTENER LAST ID
                         res.status(201)
                         res.json({data: {
                             titulo: titulo,
                             resumen: resumen,
-                            contenido: contenido
+                            contenido: contenido,
+                            id : idPublicacion
                         }})
                     }
                     else {
@@ -258,9 +276,9 @@ router.post('/publicaciones', function (req, res) {
                 })
             }
             else{
-                res.status(417)
+                res.status(401)
                 res.send({ errors: {
-                    mensaje: "Las credenciales no son validas."
+                    mensaje: "No esta autorizado para realizar la operación."
                 }})
             }
         })
