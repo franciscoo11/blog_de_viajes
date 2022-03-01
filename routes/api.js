@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const mysql = require('mysql')
-const utils = require('../utils')
 
 var pool = mysql.createPool({
     connectionLimit: 20,
@@ -224,12 +223,20 @@ router.post('/autores', function (req, res) {
 
 router.post('/publicaciones', function (req, res) {
     pool.getConnection(function (err, connection) {
-        const email = req.query.email
+        const email = req.query.email.toLowerCase().trim()
         const contrasena = req.query.contrasena
         const titulo = req.body.titulo
         const resumen = req.body.resumen
         const contenido = req.body.contenido
-        idAutor,error = utils.obtenerAutorSegunCredenciales(connection,email,contrasena)
+        
+        const consulta = `
+            SELECT *
+            FROM autores
+            WHERE 
+            email = ${connection.escape(email)} AND 
+            contrasena = ${connection.escape(contrasena)}
+        `
+        connection.query(consulta, (error,filas,campos) => {
             if (error){
                 res.status(500)
                 res.send({ error: {
@@ -238,7 +245,8 @@ router.post('/publicaciones', function (req, res) {
                 }})
                 return
             }
-            if (idAutor > 0){
+            if (filas.length > 0){
+                const id_autor = filas[0].id
                 const insertConsulta = `
                     INSERT 
                     INTO publicaciones
@@ -256,9 +264,7 @@ router.post('/publicaciones', function (req, res) {
                         return
                     }
                     if (filas && filas.affectedRows > 0){
-                        const idPublicacion = filas[0].insertId
-                        console.log(idPublicacion)
-                        //const idPublicacion = filas[0].id ---> VERIFICAR COMO OBTENER LAST ID
+                        const idPublicacion = filas.insertId
                         res.status(201)
                         res.json({data: {
                             titulo: titulo,
@@ -283,8 +289,8 @@ router.post('/publicaciones', function (req, res) {
             }
         })
         connection.release()
-    })   
-})
+    })
+})   
 
 router.delete('/publicaciones/:id', function (req,res){
     pool.getConnection(function (err,connection){

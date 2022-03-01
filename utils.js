@@ -1,4 +1,4 @@
-function obtenerAutorSegunCredenciales(connection,email,contrasena,){
+function obtenerAutorSegunCredenciales(connection,email,contrasena){
     email = email.toLowerCase().trim()   
     const consulta = `
             SELECT
@@ -8,16 +8,13 @@ function obtenerAutorSegunCredenciales(connection,email,contrasena,){
             email = ${connection.escape(email)} AND 
             contrasena = ${connection.escape(contrasena)}
     `
-    connection.query(consulta, (error,filas,campos) => {
-        if (error){
-            return 0, true
-        }
-        if (filas.length == 0){
-            return 0, false
-        }
-        return filas[0].id, false
-    })
+    
+    let idAutor = 0
+    let error = false
+    
+    connection.query(consulta, function)
 
+    return idAutor, error
 }
 
-exports.obtenerAutorSegunCredenciales = obtenerAutorSegunCredenciales();
+exports.obtenerAutorSegunCredenciales = obtenerAutorSegunCredenciales;
