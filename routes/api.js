@@ -29,7 +29,7 @@ router.get('/publicaciones', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la informacion solicitada"
+                    mensaje: "Falló inesperado en el servidor."
                 }})
                 return
             }
@@ -57,7 +57,7 @@ router.get('/publicaciones/:id', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la información solicitada"
+                    mensaje: "Falló inesperado en el servidor."
                 }})
                 return
             }
@@ -83,7 +83,7 @@ router.get('/autores', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la información solicitada"
+                    mensaje: "Falló inesperado en el servidor."
                 }})
                 return
             }
@@ -118,7 +118,7 @@ router.get('/autores/:id', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la información solicitada"
+                    mensaje: "Falló inesperado en el servidor."
                 }})
                 return
             }
@@ -154,7 +154,7 @@ router.post('/autores', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la información solicitada"
+                    mensaje: "Falló inesperado en el servidor."
                 }})
                 return
             }
@@ -174,7 +174,7 @@ router.post('/autores', function (req, res) {
                     res.status(500)
                     res.send({ error: {
                         codigo: error.code, 
-                        mensaje: "error al buscar la información solicitada"
+                        mensaje: "Falló inesperado en el servidor."
                     }})
                     return
                 }
@@ -195,7 +195,7 @@ router.post('/autores', function (req, res) {
                         res.status(500)
                         res.send({ error: {
                             codigo: error.code, 
-                            mensaje: "error al insertar la información."
+                            mensaje: "Falló inesperado en el servidor."
                         }})
                         return
                     }
@@ -228,7 +228,6 @@ router.post('/publicaciones', function (req, res) {
         const titulo = req.body.titulo
         const resumen = req.body.resumen
         const contenido = req.body.contenido
-        
         const consulta = `
             SELECT *
             FROM autores
@@ -241,7 +240,7 @@ router.post('/publicaciones', function (req, res) {
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la información."
+                    mensaje: "Falló inesperado en el servidor."
                 }})
                 return
             }
@@ -259,7 +258,7 @@ router.post('/publicaciones', function (req, res) {
                         res.status(500)
                         res.send({ error: {
                             codigo: error.code, 
-                            mensaje: "error al insertar la informacion."
+                            mensaje: "Falló inesperado en el servidor."
                         }})
                         return
                     }
@@ -310,7 +309,7 @@ router.delete('/publicaciones/:id', function (req,res){
                 res.status(500)
                 res.send({ error: {
                     codigo: error.code, 
-                    mensaje: "error al buscar la información."
+                    mensaje: "Falló inesperado en el servidor."
                 }})
                 return
             }
@@ -330,7 +329,7 @@ router.delete('/publicaciones/:id', function (req,res){
                         res.status(500)
                         res.send({ error: {
                             codigo: error.code, 
-                            mensaje: "error al buscar la información."
+                            mensaje: "Falló inesperado en el servidor."
                         }})
                         return
                     }
