@@ -76,9 +76,21 @@ router.get('/publicaciones/:id', function (req, res) {
     })
 })
 
-router.get('/autores', function (req, res) {
+router.get('/autores/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
-        const query = ` SELECT * FROM autores `
+        let query
+        const idAutor = ( req.params.id ) ? connection.escape(req.params.id) : ""
+        query = ` SELECT * FROM autores `
+        if (idAutor != ""){
+            query = ` 
+            SELECT
+            publicaciones.id id, titulo, resumen, fecha_hora, pseudonimo, votos, avatar
+            FROM publicaciones
+            INNER JOIN autores
+            ON publicaciones.autor_id = autores.id
+            WHERE autor_id = ${connection.escape(req.params.id)} 
+            `
+        }
         connection.query(query, function (error, filas, campos) {
             if (error){
                 res.status(500)
@@ -97,41 +109,6 @@ router.get('/autores', function (req, res) {
                 res.send({errors: {
                     codigo: "NOT_FOUND", 
                     mensaje: "No se encontro ningún autor."
-                }})
-            }
-        })
-        connection.release()
-    })
-})
-
-router.get('/autores/:id', function (req, res) {
-    pool.getConnection(function (err, connection) {
-        const query = ` 
-        SELECT
-        publicaciones.id id, titulo, resumen, fecha_hora, pseudonimo, votos, avatar
-        FROM publicaciones
-        INNER JOIN autores
-        ON publicaciones.autor_id = autores.id
-        WHERE autor_id = ${connection.escape(req.params.id)} 
-        `
-        connection.query(query, function (error, filas, campos) {
-            if (error){
-                res.status(500)
-                res.send({ error: {
-                    codigo: error.code, 
-                    mensaje: "error al buscar la información solicitada"
-                }})
-                return
-            }
-            if (filas.length > 0) {
-                res.status(200)
-                res.json({ data: filas })
-            }
-            else {
-                res.status(407)
-                res.send({errors: {
-                    codigo: "NOT_EXIST", 
-                    mensaje: "El autor no existe."
                 }})
             }
         })
