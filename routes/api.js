@@ -33,17 +33,16 @@ router.get('/publicaciones', function (req, res) {
                 }})
                 return
             }
-            if (filas.length > 0) {
-                res.status(200)
-                res.json({ data: filas })
-            }
-            else {
+            if (filas.length == 0) {
                 res.status(404)
                 res.send({ error: {
                     codigo: "NOT_FOUND", 
                     mensaje: "No se encontro ninguna publicación."
                 }})
+                return
             }
+            res.status(200)
+            res.json({ data: filas })
         })
         connection.release()
     })
@@ -66,18 +65,16 @@ router.get('/publicaciones/:id', function (req, res) {
                 }})
                 return
             }
-            if (filas.length > 0) {
-                res.status(200)
-                res.json({ data: filas[0] })
-            }
-            else{
+            if (filas.length == 0) {
                 res.status(404)
                 res.send({ error: {
                     codigo: "NOT_FOUND", 
                     mensaje: "No se encontro ninguna publicación."
                 }})
+                return
             }
-            
+            res.status(200)
+            res.json({ data: filas[0] })
         })
         connection.release()
     })
@@ -95,17 +92,19 @@ router.get('/autores', function (req, res) {
                 }})
                 return
             }
-            if (filas.length > 0) {
-                res.status(200)
-                res.json({ data: filas })
-            }
-            else {
+            if (filas.length == 0) {
                 res.status(404)
                 res.send({errors: {
                     codigo: "NOT_FOUND", 
                     mensaje: "No se encontro ningún autor."
                 }})
+                return
             }
+            res.status(404)
+            res.send({errors: {
+                codigo: "NOT_FOUND", 
+                mensaje: "No se encontro ningún autor."
+            }})
         })
         connection.release()
     })
@@ -130,17 +129,16 @@ router.get('/autores/:id', function (req, res) {
                 }})
                 return
             }
-            if (filas.length > 0) {
-                res.status(200)
-                res.json({ data: filas })
-            }
-            else {
+            if (filas.length == 0) {
                 res.status(404)
                 res.send({errors: {
                     codigo: "NOT_FOUND", 
                     mensaje: "El autor ingresado no es válido o no posee publicaciones."
                 }})
+                return
             }
+            res.status(200)
+            res.json({ data: filas })
         })
         connection.release()
     })
@@ -166,17 +164,16 @@ router.post('/autores', function (req, res) {
                 }})
                 return
             }
-            if (filas.length > 0) {
-                res.status(422)
-                res.send({ errors: ['El email ya se encuentra registrado.'] })
-            }
-            else {
+            if (filas.length == 0) {
                 query = `
                 SELECT *
                 FROM autores
                 WHERE pseudonimo = ${connection.escape(pseudonimo)}
                 `
+                return
             }
+            res.status(422)
+            res.send({ errors: ['El email ya se encuentra registrado.'] })
             connection.query(query, (error, filas, campos) => {
                 if (error){
                     res.status(500)
@@ -186,18 +183,18 @@ router.post('/autores', function (req, res) {
                     }})
                     return
                 }
-                if (filas.length > 0) {
-                    res.status(422)
-                    res.send({ errors: ['El pseoudonimo ya se encuentra registrado.'] })
-                    return
-                }
-                query = `
+                if (filas.length == 0) {
+                    query = `
                     INSERT 
                     INTO autores 
                     (pseudonimo, email, contrasena) 
                     VALUES
                     (${connection.escape(pseudonimo)},${connection.escape(email)},${connection.escape(contrasena)})
-                `
+                    `
+                    return
+                }
+                res.status(422)
+                res.send({ errors: ['El pseoudonimo ya se encuentra registrado.'] })
                 connection.query(query, function (error, filas, campos) {
                     if (error){
                         res.status(500)
@@ -207,21 +204,21 @@ router.post('/autores', function (req, res) {
                         }})
                         return
                     }
-                    if (filas && filas.affectedRows > 0){
-                        res.status(201)
-                        res.json({ data: {
-                            email: email, 
-                            pseudonimo: pseudonimo,
-                            contrasena: contrasena,
-                        }})
-                    }
-                    else{
+                    if (filas && filas.affectedRows == 0){
                         res.status(403)
                         res.send({ errors: {
                             codigo: "BODY_WRONG",
                             mensaje: "error verifica la información enviada en el cuerpo."
                         }})
                     }
+                    const idAutor = filas.insertId
+                    res.status(201)
+                    res.json({ data: {
+                        email: email, 
+                        pseudonimo: pseudonimo,
+                        contrasena: contrasena,
+                        id: idAutor
+                    }})
                 })
                 connection.release()  
             })    
@@ -253,13 +250,13 @@ router.post('/publicaciones', function (req, res) {
                 return
             }
             if (filas.length > 0){
-                const id_autor = filas[0].id
+                const idAutor = filas[0].id
                 const insertConsulta = `
                     INSERT 
                     INTO publicaciones
                     (titulo, resumen, contenido, autor_id)
                     VALUES
-                    (${connection.escape(titulo)},${connection.escape(resumen)},${connection.escape(contenido)}, ${connection.escape(id_autor)})
+                    (${connection.escape(titulo)},${connection.escape(resumen)},${connection.escape(contenido)}, ${connection.escape(idAutor)})
                 `
                 connection.query(insertConsulta, (error,filas,campos) => {
                     if (error){
@@ -270,22 +267,22 @@ router.post('/publicaciones', function (req, res) {
                         }})
                         return
                     }
-                    if (filas && filas.affectedRows > 0){
-                        const idPublicacion = filas.insertId
-                        res.status(201)
-                        res.json({data: {
-                            titulo: titulo,
-                            resumen: resumen,
-                            contenido: contenido,
-                            id : idPublicacion
-                        }})
-                    }
-                    else {
+                    if (filas.affectedRows == 0){
                         res.status(403)
                         res.send({ errors: {
                         mensaje: "error verifica la información enviada en el cuerpo."
                         }})
+                        return
                     }
+                    const idPublicacion = filas.insertId
+                    res.status(201)
+                    res.json({data: {
+                        titulo: titulo,
+                        resumen: resumen,
+                        contenido: contenido,
+                        id : idPublicacion
+                    }})
+                    return
                 })
             }
             else{
@@ -322,7 +319,7 @@ router.delete('/publicaciones/:id', function (req,res){
                 return
             }
             if (filas.length > 0){
-                const autor_id = filas[0].id
+                const idAutor = filas[0].id
                 const query = ` 
                     DELETE 
                     FROM 
@@ -330,7 +327,7 @@ router.delete('/publicaciones/:id', function (req,res){
                     WHERE
                     id = ${connection.escape(id)} 
                     AND 
-                    autor_id = ${connection.escape(autor_id)}
+                    autor_id = ${connection.escape(idAutor)}
                 `
                 connection.query(query, (error,filas,columnas) => {
                     if (error){
@@ -341,14 +338,12 @@ router.delete('/publicaciones/:id', function (req,res){
                         }})
                         return
                     }
-                    if (filas && filas.affectedRows > 0){
-                        res.status(200)
-                        res.json({data : ["Publicación eliminada"]})
+                    if (filas && filas.affectedRows == 0){
+                        res.status(406)
+                        res.json({errors: ["No se pudo concretar la operación. Por que la publicación no existe o bien usted no es el propietario."]})
                     }
-                    else {
-                        res.status(401)
-                        res.json({errors: ["El id ingresado no corresponde. Por lo tanto no se realizo la acción."]})
-                    }
+                    res.status(200)
+                    res.json({data : ["Publicación eliminada"]})
                 })
             }
         })
