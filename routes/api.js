@@ -314,9 +314,15 @@ router.delete('/publicaciones/:id', function (req,res){
                 }})
                 return
             }
-            if (filas.length > 0){
-                const idAutor = filas[0].id
-                const query = ` 
+            if (filas.length == 0){
+                res.status(401)
+                res.send({ errors: {
+                    mensaje: "Las credenciales no son válidas."
+                }})
+                return
+            }
+            const idAutor = filas[0].id
+            const query = ` 
                     DELETE 
                     FROM 
                     publicaciones 
@@ -324,25 +330,24 @@ router.delete('/publicaciones/:id', function (req,res){
                     id = ${connection.escape(id)} 
                     AND 
                     autor_id = ${connection.escape(idAutor)}
-                `
-                connection.query(query, (error,filas,columnas) => {
-                    if (error){
-                        res.status(500)
-                        res.send({ error: {
-                            codigo: error.code, 
-                            mensaje: "Falló inesperado en el servidor."
-                        }})
-                        return
-                    }
-                    if (filas && filas.affectedRows == 0){
-                        res.status(406)
-                        res.json({errors: ["No se pudo concretar la operación. Por que la publicación no existe o bien usted no es el propietario."]})
-                        return
-                    }
-                    res.status(200)
-                    res.json({data : ["Publicación eliminada"]})
-                })
-            }
+            `
+            connection.query(query, (error,filas,columnas) => {
+                if (error){
+                    res.status(500)
+                    res.send({ error: {
+                        codigo: error.code, 
+                        mensaje: "Falló inesperado en el servidor."
+                    }})
+                    return
+                }
+                if (filas && filas.affectedRows == 0){
+                    res.status(406)
+                    res.json({errors: ["No se pudo concretar la operación. Por que la publicación no existe o bien usted no es el propietario."]})
+                    return
+                }
+                res.status(200)
+                res.json({data : ["Publicación eliminada"]})
+            })
         })
         connection.release()
     })
