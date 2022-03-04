@@ -100,11 +100,8 @@ router.get('/autores', function (req, res) {
                 }})
                 return
             }
-            res.status(404)
-            res.send({errors: {
-                codigo: "NOT_FOUND", 
-                mensaje: "No se encontro ningún autor."
-            }})
+            res.status(200)
+            res.send({data: filas})
         })
         connection.release()
     })
@@ -114,7 +111,7 @@ router.get('/autores/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` 
         SELECT
-        publicaciones.id id, titulo, resumen, fecha_hora, pseudonimo, votos, avatar
+        publicaciones.id id_publicacion, autor_id, titulo, resumen, fecha_hora, pseudonimo, votos, avatar
         FROM publicaciones
         INNER JOIN autores
         ON publicaciones.autor_id = autores.id
@@ -164,16 +161,16 @@ router.post('/autores', function (req, res) {
                 }})
                 return
             }
-            if (filas.length == 0) {
-                query = `
+            if (filas.length > 0) {
+                res.status(422)
+                res.send({ errors: ['El email ya se encuentra registrado.'] })
+                return
+            }
+            query = `
                 SELECT *
                 FROM autores
                 WHERE pseudonimo = ${connection.escape(pseudonimo)}
-                `
-                return
-            }
-            res.status(422)
-            res.send({ errors: ['El email ya se encuentra registrado.'] })
+            `
             connection.query(query, (error, filas, campos) => {
                 if (error){
                     res.status(500)
@@ -183,18 +180,18 @@ router.post('/autores', function (req, res) {
                     }})
                     return
                 }
-                if (filas.length == 0) {
-                    query = `
+                if (filas.length > 0) {
+                    res.status(422)
+                    res.send({ errors: ['El pseoudonimo ya se encuentra registrado.'] })
+                    return
+                }
+                query = `
                     INSERT 
                     INTO autores 
                     (pseudonimo, email, contrasena) 
                     VALUES
                     (${connection.escape(pseudonimo)},${connection.escape(email)},${connection.escape(contrasena)})
-                    `
-                    return
-                }
-                res.status(422)
-                res.send({ errors: ['El pseoudonimo ya se encuentra registrado.'] })
+                `
                 connection.query(query, function (error, filas, campos) {
                     if (error){
                         res.status(500)
@@ -210,6 +207,7 @@ router.post('/autores', function (req, res) {
                             codigo: "BODY_WRONG",
                             mensaje: "error verifica la información enviada en el cuerpo."
                         }})
+                        return
                     }
                     const idAutor = filas.insertId
                     res.status(201)
@@ -219,9 +217,9 @@ router.post('/autores', function (req, res) {
                         contrasena: contrasena,
                         id: idAutor
                     }})
-                })
-                connection.release()  
-            })    
+                })  
+            })   
+            connection.release()
         })
     })
 })
@@ -249,48 +247,46 @@ router.post('/publicaciones', function (req, res) {
                 }})
                 return
             }
-            if (filas.length > 0){
-                const idAutor = filas[0].id
-                const insertConsulta = `
-                    INSERT 
-                    INTO publicaciones
-                    (titulo, resumen, contenido, autor_id)
-                    VALUES
-                    (${connection.escape(titulo)},${connection.escape(resumen)},${connection.escape(contenido)}, ${connection.escape(idAutor)})
-                `
-                connection.query(insertConsulta, (error,filas,campos) => {
-                    if (error){
-                        res.status(500)
-                        res.send({ error: {
-                            codigo: error.code, 
-                            mensaje: "Falló inesperado en el servidor."
-                        }})
-                        return
-                    }
-                    if (filas.affectedRows == 0){
-                        res.status(403)
-                        res.send({ errors: {
-                        mensaje: "error verifica la información enviada en el cuerpo."
-                        }})
-                        return
-                    }
-                    const idPublicacion = filas.insertId
-                    res.status(201)
-                    res.json({data: {
-                        titulo: titulo,
-                        resumen: resumen,
-                        contenido: contenido,
-                        id : idPublicacion
-                    }})
-                    return
-                })
-            }
-            else{
+            if (filas.length == 0){
                 res.status(401)
                 res.send({ errors: {
                     mensaje: "No esta autorizado para realizar la operación."
                 }})
+                return
             }
+            const idAutor = filas[0].id
+            const insertConsulta = `
+                INSERT 
+                INTO publicaciones
+                (titulo, resumen, contenido, autor_id)
+                VALUES
+                (${connection.escape(titulo)},${connection.escape(resumen)},${connection.escape(contenido)}, ${connection.escape(idAutor)})
+            `
+            connection.query(insertConsulta, (error,filas,campos) => {
+                if (error){
+                    res.status(500)
+                    res.send({ error: {
+                        codigo: error.code, 
+                        mensaje: "Falló inesperado en el servidor."
+                    }})
+                    return
+                }
+                if (filas && filas.affectedRows == 0){
+                    res.status(403)
+                    res.send({ errors: {
+                    mensaje: "error verifica la información enviada en el cuerpo."
+                    }})
+                    return
+                }
+                const idPublicacion = filas.insertId
+                res.status(201)
+                res.json({data: {
+                    titulo: titulo,
+                    resumen: resumen,
+                    contenido: contenido,
+                    id : idPublicacion
+                }})
+            })
         })
         connection.release()
     })
@@ -341,6 +337,7 @@ router.delete('/publicaciones/:id', function (req,res){
                     if (filas && filas.affectedRows == 0){
                         res.status(406)
                         res.json({errors: ["No se pudo concretar la operación. Por que la publicación no existe o bien usted no es el propietario."]})
+                        return
                     }
                     res.status(200)
                     res.json({data : ["Publicación eliminada"]})
