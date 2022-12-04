@@ -10,7 +10,9 @@ var pool = mysql.createPool({
     database: 'blog_viajes'
 })
 
+
 router.get('/publicaciones', function (req, res) {
+
     pool.getConnection(function (err, connection) {
         let query
         const busqueda_api = ( req.query.busqueda ) ? connection.escape(req.query.busqueda) : ""
@@ -41,12 +43,22 @@ router.get('/publicaciones', function (req, res) {
                 }})
                 return
             }
+        })
+        connection.release()
+    })
+})
+
+router.get('/api/v1/publicaciones', function (req, res) {
+    pool.getConnection(function (err, connection) {
+        const query = ` SELECT * FROM publicaciones `
+        connection.query(query, function (error, filas, campos) {
             res.status(200)
             res.json({ data: filas })
         })
         connection.release()
     })
 })
+
 
 router.get('/publicaciones/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
@@ -80,6 +92,7 @@ router.get('/publicaciones/:id', function (req, res) {
     })
 })
 
+
 router.get('/autores', function (req, res) {
     pool.getConnection(function (err, connection) {
         const query = ` SELECT * FROM autores `
@@ -106,6 +119,7 @@ router.get('/autores', function (req, res) {
         connection.release()
     })
 })
+
 
 router.get('/autores/:id', function (req, res) {
     pool.getConnection(function (err, connection) {
